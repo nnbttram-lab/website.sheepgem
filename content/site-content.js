@@ -6,7 +6,7 @@ window.SITE_CONTENT = {
   "site": {
     "name": "Sheep Gem",
     "tagline": "Feng Shui Stones for a Balanced Life",
-    "logoText": "Sheep Gemmmm",
+    "logoText": "Sheep Gem",
     "year": 2026
   },
   "nav": [
