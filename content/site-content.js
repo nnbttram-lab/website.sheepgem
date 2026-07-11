@@ -1,5 +1,5 @@
 /**
- * SHEEP GEM — SITE CONTENT (edited via admin.html)
+ * SHEEP GEM — SITE CONTENT (published via admin.html)
  */
 
 window.SITE_CONTENT = {
