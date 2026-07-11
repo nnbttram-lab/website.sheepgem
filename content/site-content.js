@@ -16,7 +16,7 @@ window.SITE_CONTENT = {
     },
     {
       "label": "Năng lượng",
-      "href": "#intentions"
+      "href": "#nangluong"
     },
     {
       "label": "Đá phong thuỷ",
@@ -61,7 +61,7 @@ window.SITE_CONTENT = {
   },
   "intentions": [
     {
-      "id": "wealth",
+      "id": "Tài chính",
       "name": "Wealth & Abundance",
       "stone": "Citrine",
       "element": "Wood",
@@ -195,7 +195,7 @@ window.SITE_CONTENT = {
     "social": [
       {
         "label": "Instagram",
-        "href": "https://instagram.com/sheepgem"
+        "href": "https://instagram.com/sheep.gem"
       },
       {
         "label": "Pinterest",
@@ -203,7 +203,7 @@ window.SITE_CONTENT = {
       },
       {
         "label": "TikTok",
-        "href": "https://tiktok.com/@sheepgem"
+        "href": "https://tiktok.com/@sheep.gem"
       }
     ]
   },
