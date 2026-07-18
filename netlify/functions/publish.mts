@@ -1,4 +1,5 @@
 import type { Config } from "@netlify/functions";
+import { renderIndexHTML } from "../../lib/render-site.mjs";
 
 const GITHUB_OWNER = "nnbttram-lab";
 const GITHUB_REPO = "website.sheepgem";
@@ -106,6 +107,35 @@ export default async (req: Request) => {
 
   if (!commitResult.ok) {
     return jsonResponse(502, { error: "Could not commit content update.", detail: commitResult.detail });
+  }
+
+  // 1b. Also render a real, fully-populated index.html (not an empty shell
+  //     that JavaScript fills in later) so browsers, Google, and any tool
+  //     that reads raw HTML see the actual content immediately — important
+  //     for SEO now that this site is meant to grow into a content hub.
+  let renderedHtml: string;
+  try {
+    renderedHtml = renderIndexHTML(payload.content as any);
+  } catch (err) {
+    return jsonResponse(502, {
+      error: "Content published, but the page could not be rendered.",
+      detail: String(err),
+    });
+  }
+  const htmlBase64 = Buffer.from(renderedHtml, "utf-8").toString("base64");
+
+  const htmlCommitResult = await commitFile(
+    "index.html",
+    htmlBase64,
+    "Publish rendered index.html via admin.html",
+    headers
+  );
+
+  if (!htmlCommitResult.ok) {
+    return jsonResponse(502, {
+      error: "Content published, but rendered page failed to commit.",
+      detail: htmlCommitResult.detail,
+    });
   }
 
   // 2. Commit any updated images the same way.
