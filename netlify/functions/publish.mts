@@ -109,33 +109,41 @@ export default async (req: Request) => {
     return jsonResponse(502, { error: "Could not commit content update.", detail: commitResult.detail });
   }
 
-  // 1b. Also render a real, fully-populated index.html (not an empty shell
-  //     that JavaScript fills in later) so browsers, Google, and any tool
-  //     that reads raw HTML see the actual content immediately — important
-  //     for SEO now that this site is meant to grow into a content hub.
-  let renderedHtml: string;
-  try {
-    renderedHtml = renderIndexHTML(payload.content as any);
-  } catch (err) {
-    return jsonResponse(502, {
-      error: "Content published, but the page could not be rendered.",
-      detail: String(err),
-    });
-  }
-  const htmlBase64 = Buffer.from(renderedHtml, "utf-8").toString("base64");
+  // 1b. Also render real, fully-populated HTML pages (not an empty shell
+  //     that JavaScript fills in later) — one per language — so browsers,
+  //     Google, and any tool that reads raw HTML see the actual content
+  //     immediately. Vietnamese is the root site (index.html); English lives
+  //     at /en/index.html, with hreflang tags linking the two.
+  const PAGES: Array<{ lang: "vi" | "en"; path: string }> = [
+    { lang: "vi", path: "index.html" },
+    { lang: "en", path: "en/index.html" },
+  ];
 
-  const htmlCommitResult = await commitFile(
-    "index.html",
-    htmlBase64,
-    "Publish rendered index.html via admin.html",
-    headers
-  );
+  for (const page of PAGES) {
+    let renderedHtml: string;
+    try {
+      renderedHtml = renderIndexHTML(payload.content as any, page.lang);
+    } catch (err) {
+      return jsonResponse(502, {
+        error: `Content published, but the ${page.lang} page could not be rendered.`,
+        detail: String(err),
+      });
+    }
+    const htmlBase64 = Buffer.from(renderedHtml, "utf-8").toString("base64");
 
-  if (!htmlCommitResult.ok) {
-    return jsonResponse(502, {
-      error: "Content published, but rendered page failed to commit.",
-      detail: htmlCommitResult.detail,
-    });
+    const htmlCommitResult = await commitFile(
+      page.path,
+      htmlBase64,
+      `Publish rendered ${page.path} via admin.html`,
+      headers
+    );
+
+    if (!htmlCommitResult.ok) {
+      return jsonResponse(502, {
+        error: `Content published, but ${page.path} failed to commit.`,
+        detail: htmlCommitResult.detail,
+      });
+    }
   }
 
   // 2. Commit any updated images the same way.
