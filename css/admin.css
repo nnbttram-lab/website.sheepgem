@@ -242,6 +242,56 @@ legend {
 }
 .field-row textarea { min-height: 70px; resize: vertical; }
 
+.bilingual-langs-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 700px) {
+  .bilingual-langs-wrap { grid-template-columns: 1fr; }
+}
+.bilingual-lang-col { display: flex; flex-direction: column; }
+.bilingual-lang-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-accent);
+  margin-bottom: 3px;
+}
+.bilingual-lang-col input, .bilingual-lang-col textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+.bilingual-lang-col textarea { min-height: 70px; resize: vertical; }
+
+.preview-lang-toggle {
+  display: flex;
+  gap: 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 3px;
+}
+.lang-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--color-text-muted);
+}
+.lang-btn.active {
+  background: var(--color-accent);
+  color: #fff;
+}
+
 .array-item {
   border: 1px dashed var(--color-border);
   border-radius: 8px;
