@@ -1,11 +1,22 @@
 /**
  * Generic form generator for editing window.SITE_CONTENT.
  * Walks the content object, renders inputs bound to each field's path,
- * and lets you download a regenerated content/site-content.js.
+ * and publishes changes via the serverless function.
+ *
+ * BILINGUAL FIELDS: any field shaped { en: "...", vi: "..." } is detected
+ * automatically and rendered as two side-by-side inputs (English / Tiếng
+ * Việt) instead of a generic nested fieldset — no per-field configuration
+ * needed. Add a new language later by adding one more key to the schema and
+ * one more branch here.
  */
 (function () {
   const draft = JSON.parse(JSON.stringify(window.SITE_CONTENT || {}));
   const form = document.getElementById("content-form");
+
+  const LANGS = [
+    { code: "en", label: "English" },
+    { code: "vi", label: "Tiếng Việt" },
+  ];
 
   // Tracks newly-picked images awaiting publish: { "images/products/foo.jpg": "data:image/...base64..." }
   const pendingImages = {};
@@ -31,6 +42,18 @@
       typeof value === "string" &&
       (key === "image" || /\.(jpe?g|png|webp|gif|svg)$/i.test(value))
     );
+  }
+
+  // A "bilingual leaf" is an object whose only keys are language codes we
+  // support, with string values — e.g. { en: "Hello", vi: "Xin chào" }.
+  // Detected structurally so new bilingual fields just work without any
+  // per-field admin config.
+  function isBilingualField(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+    const keys = Object.keys(value);
+    if (keys.length === 0) return false;
+    const langCodes = LANGS.map((l) => l.code);
+    return keys.every((k) => langCodes.includes(k)) && keys.every((k) => typeof value[k] === "string");
   }
 
   function renderImageField(container, value, path, key) {
@@ -146,8 +169,50 @@
     input.addEventListener("input", () => {
       const v = typeof value === "number" ? Number(input.value) : input.value;
       setAtPath(draft, path, v);
+      pushPreview();
     });
     row.appendChild(input);
+    container.appendChild(row);
+  }
+
+  // Renders one field as N side-by-side language boxes, e.g.:
+  //   Headline
+  //   [English textarea]   [Tiếng Việt textarea]
+  function renderBilingualField(container, value, path, key) {
+    const row = document.createElement("div");
+    row.className = "field-row bilingual-field-row";
+    const label = document.createElement("label");
+    label.textContent = labelFor(key);
+    row.appendChild(label);
+
+    const langsWrap = document.createElement("div");
+    langsWrap.className = "bilingual-langs-wrap";
+
+    LANGS.forEach(({ code, label: langLabel }) => {
+      const col = document.createElement("div");
+      col.className = "bilingual-lang-col";
+
+      const tag = document.createElement("span");
+      tag.className = "bilingual-lang-tag";
+      tag.textContent = langLabel;
+      col.appendChild(tag);
+
+      const fieldValue = value[code] || "";
+      const isLong = fieldValue.length > 60;
+      const input = document.createElement(isLong ? "textarea" : "input");
+      if (!isLong) input.type = "text";
+      input.value = fieldValue;
+      input.placeholder = langLabel;
+      input.addEventListener("input", () => {
+        setAtPath(draft, path.concat(code), input.value);
+        pushPreview();
+      });
+      col.appendChild(input);
+
+      langsWrap.appendChild(col);
+    });
+
+    row.appendChild(langsWrap);
     container.appendChild(row);
   }
 
@@ -168,6 +233,8 @@
         fs.appendChild(wrap);
       });
       container.appendChild(fs);
+    } else if (isBilingualField(value)) {
+      renderBilingualField(container, value, path, key);
     } else if (value !== null && typeof value === "object") {
       const fs = document.createElement("fieldset");
       const legend = document.createElement("legend");
@@ -192,10 +259,14 @@
   // Live preview -------------------------------------------------------------
   const previewFrame = document.getElementById("preview-frame");
   let previewReady = false;
+  let previewLang = "vi";
 
   function pushPreview() {
     if (!previewReady || !previewFrame.contentWindow) return;
-    previewFrame.contentWindow.postMessage({ type: "SITE_CONTENT_UPDATE", payload: draft }, "*");
+    previewFrame.contentWindow.postMessage(
+      { type: "SITE_CONTENT_UPDATE", payload: draft, lang: previewLang },
+      "*"
+    );
   }
 
   window.addEventListener("message", (event) => {
@@ -220,6 +291,16 @@
       document.querySelectorAll(".device-btn").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       previewFrame.style.width = btn.dataset.width;
+    });
+  });
+
+  // Language toggle for the preview pane ---------------------------------------
+  document.querySelectorAll(".lang-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".lang-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      previewLang = btn.dataset.lang;
+      pushPreview();
     });
   });
 
