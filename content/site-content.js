@@ -61,12 +61,12 @@ window.SITE_CONTENT = {
   },
   "intentions": [
     {
-      "id": "Tài chính",
+      "id": "Tài Lộc & Thịnh Vượng",
       "name": "Wealth & Abundance",
-      "stone": "Citrine",
-      "element": "Wood",
-      "baguaArea": "Southeast",
-      "description": "Placed in the wealth corner to invite prosperity and opportunity.",
+      "stone": "Garnet, Thạch Anh Vàng",
+      "element": "Lửa, Đất",
+      "baguaArea": "",
+      "description": "Đam mê • Thăng tiến • Thu hút tài lộc",
       "color": "#d9a441"
     },
     {
